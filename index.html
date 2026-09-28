@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff7d9" />
+  <title>數學PK賽｜一萬內的加減法</title>
+  <style>
+    :root { --ink:#24334d; --paper:#fffdf6; --red:#ef4b55; --red-dark:#b92e3b; --blue:#3187dd; --blue-dark:#1761ab; --yellow:#ffd34f; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0; min-height:100vh; overflow:hidden; font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif; color:var(--ink); background:linear-gradient(135deg,#fff5c9 0%,#f5fbff 48%,#e4f8ff 100%); }
+    button { font:inherit; cursor:pointer; touch-action:manipulation; }
+    .screen { min-height:100vh; display:none; align-items:center; justify-content:center; padding:clamp(14px,2vw,28px); position:relative; overflow:hidden; }
+    .screen.active { display:flex; }
+    .home-card,.result-card { position:relative; z-index:2; width:min(900px,96vw); padding:clamp(28px,5vw,60px); text-align:center; border:5px solid #fff; border-radius:38px; background:rgba(255,253,246,.92); box-shadow:0 18px 0 #e9d99d, 0 28px 50px rgba(77,96,122,.2); }
+    .home-hero { width:min(500px,80vw); height:clamp(120px,20vh,220px); object-fit:cover; object-position:center 44%; margin:-52px auto -10px; display:block; border:4px solid #fff; border-radius:28px; background:#1e2b4e; box-shadow:0 7px 0 #d8c778; }
+    h1 { margin:0; font-size:clamp(3rem,8vw,6.5rem); line-height:1.08; letter-spacing:.08em; color:#f25b54; text-shadow:3px 4px 0 #ffe26b, 6px 7px 0 #b72f45; }
+    .subtitle { font-size:clamp(1.35rem,3vw,2.25rem); font-weight:800; margin:22px 0 22px; }
+    .time-buttons { display:flex; justify-content:center; gap:clamp(12px,2vw,24px); flex-wrap:wrap; }
+    .time-btn,.restart { min-width:168px; border:0; border-radius:24px; padding:18px 25px; color:#573b16; background:linear-gradient(#ffe970,#ffca3f); box-shadow:0 7px 0 #d99422; font-size:clamp(1.35rem,3vw,2rem); font-weight:900; transition:transform .12s,box-shadow .12s; }
+    .time-btn:hover,.restart:hover { transform:translateY(-3px); } .time-btn:active,.restart:active { transform:translateY(5px); box-shadow:0 2px 0 #d99422; }
+    .math-float { position:absolute; font-size:clamp(3rem,8vw,7rem); font-weight:900; opacity:.3; color:#50b5d8; animation:float 4s ease-in-out infinite; } .f1{left:7%;top:12%}.f2{right:8%;top:16%;animation-delay:-2s;color:#ef6670}.f3{left:12%;bottom:8%;animation-delay:-1s;color:#f0b62e}.f4{right:12%;bottom:9%;animation-delay:-3s}
+    @keyframes float { 50% { transform:translateY(-16px) rotate(8deg); } }
+
+    #game { padding:0; background:linear-gradient(180deg,#fff5bd 0 12%,#f5fbff 12% 100%); }
+    #game.screen.active { display:block; }
+    .game-shell { height:100vh; display:grid; grid-template-rows:clamp(78px,12vh,116px) 1fr; }
+    .topbar { position:relative; display:flex; align-items:center; justify-content:center; border-bottom:4px dashed #d8c778; }
+    .brand-mini { position:absolute; left:clamp(14px,3vw,38px); font-size:clamp(1.1rem,2.5vw,1.8rem); font-weight:900; color:#c7434b; }
+    .timer { min-width:clamp(170px,28vw,300px); text-align:center; padding:8px 24px; border:4px solid #fff; border-radius:999px; background:#263b5d; color:white; font-family:ui-monospace,monospace; font-size:clamp(2rem,5vw,4rem); font-weight:900; letter-spacing:.07em; box-shadow:0 7px 0 #172844; }
+    .timer.urgent { background:#e94450; animation:pulse .65s infinite alternate; } @keyframes pulse{to{transform:scale(1.07);box-shadow:0 0 0 10px rgba(233,68,80,.2)}}
+    .teams { display:grid; grid-template-columns:1fr 1fr; min-height:0; }
+    .team { min-width:0; position:relative; padding:clamp(10px,1.8vw,24px) clamp(10px,2.4vw,40px); display:grid; grid-template-rows:auto auto 1fr auto; gap:clamp(8px,1.4vh,14px); overflow:hidden; }
+    .team.red { --team:var(--red); --team-dark:var(--red-dark); --tint:#fff1f0; background:linear-gradient(135deg,#fffafa,#ffe5e6); border-right:5px solid #ffe16b; }
+    .team.blue { --team:var(--blue); --team-dark:var(--blue-dark); --tint:#eff8ff; background:linear-gradient(225deg,#f8fcff,#e0f2ff); }
+    .team-head { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .team-name { margin:0; font-size:clamp(1.45rem,3.1vw,2.5rem); font-weight:900; color:var(--team-dark); }
+    .score { white-space:nowrap; border:3px solid var(--team); border-radius:18px; padding:6px 12px; background:#fff; font-size:clamp(1rem,2vw,1.45rem); font-weight:900; color:var(--team-dark); }
+    .digit-deck { display:grid; grid-template-columns:repeat(10,1fr); gap:clamp(4px,.6vw,8px); }
+    .digit { aspect-ratio:1/1; min-width:0; border:3px solid var(--team-dark); border-radius:16px; color:white; background:linear-gradient(145deg,var(--team),var(--team-dark)); box-shadow:0 4px 0 color-mix(in srgb,var(--team-dark),#111 20%); font-size:clamp(1.25rem,3vw,2.5rem); font-weight:900; user-select:none; touch-action:none; }
+    .digit:active,.digit.selected { transform:translateY(3px); box-shadow:0 1px 0 color-mix(in srgb,var(--team-dark),#111 20%); outline:4px solid #ffe36c; }
+    .work-area { min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(8px,1.5vh,18px); }
+    .question-card { --place:clamp(40px,7.7vw,74px); width:calc(var(--place) * 5 + 76px); max-width:94%; padding:clamp(14px,2vw,22px) 14px 12px; border:4px solid var(--team); border-radius:25px; background:white; box-shadow:0 7px 0 color-mix(in srgb,var(--team) 28%,white); }
+    .vertical { display:grid; grid-template-columns:48px repeat(5,var(--place)); gap:3px 0; align-items:center; justify-content:center; font-family:ui-monospace,"Cascadia Mono",monospace; font-size:clamp(2.15rem,5vw,4.7rem); line-height:1.03; font-weight:900; color:#172c4f; }
+    .vertical .op { color:var(--team-dark); text-align:center; }.place-digit{text-align:center;min-width:0}.rule{grid-column:1/-1;border-top:5px solid #172c4f;margin-top:4px}
+    .answer-caption { font-weight:900; color:var(--team-dark); font-size:clamp(1.05rem,2vw,1.45rem); }
+    .answer-boxes { --place:clamp(40px,7.7vw,74px); display:grid; grid-template-columns:repeat(5,var(--place)); gap:0; justify-content:center; direction:ltr; transform:translateX(24px); }
+    .answer-slot { width:var(--place); height:clamp(48px,8.5vw,80px); display:grid; place-items:center; border:4px dashed var(--team); border-radius:0; background:var(--tint); color:#172c4f; font-size:clamp(1.65rem,4vw,3.2rem); font-weight:900; user-select:none; touch-action:manipulation; }
+    .answer-slot:first-child{border-radius:14px 0 0 14px}.answer-slot:last-child{border-radius:0 14px 14px 0}.answer-slot + .answer-slot{border-left-width:2px}
+    .answer-slot.filled { border-style:solid; background:#fff; }.answer-slot:active{transform:scale(.94)}
+    .feedback { min-height:1.35em; font-size:clamp(1.15rem,2.3vw,1.7rem); font-weight:900; color:var(--team-dark); text-align:center; }.feedback.ok{color:#16964a}.feedback.bad{color:#df3642}.feedback .mark{font-size:1.45em;vertical-align:-.05em}
+    .submit { width:min(100%,360px); justify-self:center; border:0; border-radius:20px; padding:clamp(11px,1.6vh,18px) 20px; background:linear-gradient(145deg,var(--team),var(--team-dark)); box-shadow:0 6px 0 color-mix(in srgb,var(--team-dark),#111 25%); color:#fff; font-size:clamp(1.35rem,2.8vw,2rem); font-weight:900; }.submit:active{transform:translateY(5px);box-shadow:0 1px 0 #222}.submit:disabled,.digit:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed}
+    .drag-ghost { position:fixed; z-index:50; width:68px;height:68px;display:grid;place-items:center;border-radius:18px;background:#fff;color:#21375d;border:4px solid #ffd64c;font-size:2.6rem;font-weight:900;pointer-events:none;transform:translate(-50%,-50%) scale(1.08);box-shadow:0 12px 25px #0003; }
+    .team.locked:after{content:"時間到！";position:absolute;inset:0;display:grid;place-items:center;background:#ffffffa8;color:#263b5d;font-size:clamp(2rem,5vw,4rem);font-weight:900;z-index:5}
+
+    .result-card { max-width:780px; overflow:hidden; }.result-card h2{margin:0 0 18px;font-size:clamp(2.1rem,5vw,4.2rem);color:#d99a16}.final-scores{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:20px 0}.final-score{padding:18px;border-radius:25px;color:#fff;font-size:clamp(1.35rem,3vw,2.2rem);font-weight:900}.final-score.red{background:var(--red)}.final-score.blue{background:var(--blue)}.winner{font-size:clamp(1.5rem,4vw,3rem);font-weight:900;margin:24px 0}.winner.champion{animation:champion .8s infinite alternate}@keyframes champion{to{transform:scale(1.045);text-shadow:0 0 18px #ffe14b}}
+    .confetti { position:absolute; width:12px;height:20px;border-radius:4px; animation:fall 3.7s linear infinite; z-index:1; }.confetti:nth-child(3n){background:#ef4b55}.confetti:nth-child(3n+1){background:#3187dd}.confetti:nth-child(3n+2){background:#ffd34f}@keyframes fall{from{transform:translateY(-12vh) rotate(0)}to{transform:translateY(115vh) rotate(720deg)}}
+    @media (max-width:680px) { body{overflow:auto}.screen{min-height:100svh}.home-hero{margin:-38px auto -10px}.game-shell{height:auto;min-height:100svh;grid-template-rows:68px 1fr}.brand-mini{font-size:.95rem}.teams{grid-template-columns:1fr;}.team.red{border-right:0;border-bottom:5px solid #ffe16b}.team{min-height:calc((100svh - 68px)/2);padding:9px 12px;gap:7px}.team-head{margin-top:0}.digit-deck{gap:4px}.digit{border-width:2px;border-radius:10px}.question-card{--place:42px;width:calc(var(--place) * 5 + 62px);padding:8px 7px 7px;border-radius:18px}.vertical{grid-template-columns:34px repeat(5,var(--place));font-size:2.05rem}.answer-boxes{--place:42px;transform:translateX(17px)}.answer-slot{height:47px;border-width:3px}.feedback{min-height:1.15em;font-size:1rem}.submit{border-radius:14px;padding:8px;font-size:1.18rem}.work-area{gap:6px}.answer-caption{font-size:.95rem}.final-scores{grid-template-columns:1fr}.result-card{padding:32px 20px} }
+  </style>
+</head>
+<body>
+  <main id="home" class="screen active" aria-label="數學PK賽開始畫面">
+    <span class="math-float f1">＋</span><span class="math-float f2">−</span><span class="math-float f3">＝</span><span class="math-float f4">★</span>
+    <section class="home-card"><img class="home-hero" src="math-pk-heroes.png" alt="兩位小朋友正在進行數學競賽" /><h1>數學PK賽</h1><p class="subtitle">請選擇挑戰時間</p><div class="time-buttons"><button class="time-btn" data-minutes="5">5分鐘</button><button class="time-btn" data-minutes="8">8分鐘</button><button class="time-btn" data-minutes="10">10分鐘</button></div></section>
+  </main>
+  <main id="game" class="screen" aria-label="數學PK賽遊戲畫面">
+    <div class="game-shell"><header class="topbar"><div class="brand-mini">🏆 數學PK賽</div><div id="timer" class="timer" aria-live="polite">⏱ 05:00</div></header><div class="teams"><section id="redTeam" class="team red" aria-label="紅隊答題區"></section><section id="blueTeam" class="team blue" aria-label="藍隊答題區"></section></div></div>
+  </main>
+  <main id="results" class="screen" aria-label="比賽結果"><div id="confettiLayer"></div><section class="result-card"><h2>🏆 數學PK賽結果 🏆</h2><div class="final-scores"><div id="redFinal" class="final-score red"></div><div id="blueFinal" class="final-score blue"></div></div><div id="winner" class="winner"></div><button id="restart" class="restart">再玩一次</button></section></main>
+  <script>
+  (() => {
+    const state = { running:false, ending:false, endAt:0, timerId:null, teams:{red:null,blue:null}, selected:null, drag:null };
+    const $ = s => document.querySelector(s);
+    function safeBeep(kind='ok') { try { const C=window.AudioContext||window.webkitAudioContext; const c=new C(); const o=c.createOscillator(),g=c.createGain(); o.type=kind==='ok'?'sine':'triangle'; o.frequency.value=kind==='ok'?740:210; g.gain.setValueAtTime(.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(.12,c.currentTime+.015); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+(kind==='win'?.42:.18)); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+(kind==='win'?.44:.2)); } catch(e){} }
+    function makeQuestion(history=[]) { let q,key,tries=0; do { const add=Math.random()<.5; let a,b; if(add){ a=200+Math.floor(Math.random()*9600); const maxB=10000-a; b=100+Math.floor(Math.random()*(maxB-99)); q={a,b,op:'＋',answer:a+b}; } else { a=1000+Math.floor(Math.random()*9000); b=100+Math.floor(Math.random()*a); q={a,b,op:'－',answer:a-b}; } key=`${q.a}${q.op}${q.b}`; tries++; } while(history.includes(key)&&tries<25); q.key=key; return q; }
+    function initTeam(color) { return { color, score:0, question:makeQuestion(), history:[], answer:Array(5).fill(''), scored:false, busy:false }; }
+    function placeDigits(number) { return String(number).padStart(5,' ').split('').map(char=>`<span class="place-digit">${char===' ' ? '' : char}</span>`).join(''); }
+    function renderTeam(t) { const team=state.teams[t]; const el=$(`#${t}Team`); const title=t==='red'?'🔴 紅隊':'🔵 藍隊'; const digits=Array.from({length:10},(_,n)=>`<button class="digit" data-team="${t}" data-digit="${n}" aria-label="${title}數字${n}">${n}</button>`).join(''); const slots=team.answer.map((n,i)=>`<div class="answer-slot ${n!==''?'filled':''}" data-team="${t}" data-slot="${i}" aria-label="第${i+1}個答案位置">${n}</div>`).join('');
+      el.innerHTML=`<header class="team-head"><h2 class="team-name">${title}</h2><div class="score">目前得分：<span id="${t}Score">${team.score}</span></div></header><div class="digit-deck">${digits}</div><div class="work-area"><div class="question-card" aria-label="直式算式"><div class="vertical"><span class="op"></span>${placeDigits(team.question.a)}<span class="op">${team.question.op}</span>${placeDigits(team.question.b)}<span class="rule"></span></div></div><div><div class="answer-caption">把數字拖到答案框（萬、千、百、十、個位對齊）</div><div class="answer-boxes">${slots}</div></div><div id="${t}Feedback" class="feedback" aria-live="polite"></div></div><button class="submit" data-submit="${t}">提交</button>`;
+    }
+    function setFeedback(t,html,type=''){ const el=$(`#${t}Feedback`); if(el){el.className=`feedback ${type}`;el.innerHTML=html;} }
+    function start(minutes){ state.teams.red=initTeam('red');state.teams.blue=initTeam('blue');renderTeam('red');renderTeam('blue'); state.running=true;state.ending=false;state.endAt=Date.now()+minutes*60000;show('game'); tick();state.timerId=setInterval(tick,200); }
+    function tick(){ const left=Math.max(0,state.endAt-Date.now()); const sec=Math.ceil(left/1000); const m=String(Math.floor(sec/60)).padStart(2,'0'), s=String(sec%60).padStart(2,'0'); const timer=$('#timer');timer.textContent=`⏱ ${m}:${s}`;timer.classList.toggle('urgent',sec<=30&&sec>0);if(left<=0)endGame(); }
+    function endGame(){ if(state.ending)return;state.ending=true;state.running=false;clearInterval(state.timerId);$('#timer').textContent='⏱ 00:00';['red','blue'].forEach(t=>{ $(`#${t}Team`).classList.add('locked');});setTimeout(showResults,2000); }
+    function showResults(){ const r=state.teams.red.score,b=state.teams.blue.score; $('#redFinal').textContent=`🔴 紅隊：${r}分`;$('#blueFinal').textContent=`🔵 藍隊：${b}分`;const w=$('#winner');w.classList.add('champion');if(r>b)w.textContent='🎉 紅隊獲勝！🎉';else if(b>r)w.textContent='🎉 藍隊獲勝！🎉';else w.textContent='🤝 平手！兩隊都好厲害！';makeConfetti();safeBeep('win');show('results'); }
+    function makeConfetti(){ const layer=$('#confettiLayer');layer.innerHTML='';for(let i=0;i<38;i++){const x=document.createElement('i');x.className='confetti';x.style.left=`${Math.random()*100}%`;x.style.animationDelay=`-${Math.random()*3.6}s`;x.style.animationDuration=`${2.6+Math.random()*2}s`;layer.appendChild(x);} }
+    function show(id){ document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id)); }
+    function enterDigit(team,digit,slot=null){ if(!state.running||team.busy)return; if(slot===null){let last=team.answer.lastIndexOf('');slot=last===-1?4:last;} team.answer[slot]=String(digit);state.selected=null;renderTeam(team.color); }
+    function clearSlot(team,index){if(!state.running||team.busy)return;team.answer[index]='';renderTeam(team.color);}
+    function submit(t){const team=state.teams[t];if(!state.running||team.busy||team.scored)return;const raw=team.answer.join('');if(!raw.trim()){setFeedback(t,'請先放入數字！','bad');safeBeep('bad');return;}const val=Number(raw);if(val===team.question.answer){team.busy=true;team.scored=true;team.score++;renderTeam(t);setFeedback(t,'<span class="mark">○</span> 答對了！','ok');safeBeep('ok');setTimeout(()=>{if(!state.running)return;team.history=[...team.history,team.question.key].slice(-10);team.question=makeQuestion(team.history);team.answer=Array(5).fill('');team.scored=false;team.busy=false;renderTeam(t);},800);}else{setFeedback(t,'<span class="mark">×</span> 再想一想！','bad');safeBeep('bad');}}
+    document.addEventListener('click',e=>{const d=e.target.closest('.digit');if(d&&state.running){const team=state.teams[d.dataset.team];state.selected={team:d.dataset.team,digit:d.dataset.digit};document.querySelectorAll('.digit').forEach(x=>x.classList.remove('selected'));d.classList.add('selected');return;}const slot=e.target.closest('.answer-slot');if(slot&&state.running){const team=state.teams[slot.dataset.team];if(state.selected&&state.selected.team===slot.dataset.team)enterDigit(team,state.selected.digit,Number(slot.dataset.slot));else clearSlot(team,Number(slot.dataset.slot));return;}const btn=e.target.closest('[data-submit]');if(btn)submit(btn.dataset.submit); });
+    document.addEventListener('pointerdown',e=>{const d=e.target.closest('.digit');if(!d||!state.running)return; e.preventDefault();state.selected=null;const ghost=document.createElement('div');ghost.className='drag-ghost';ghost.textContent=d.dataset.digit;document.body.appendChild(ghost);state.drag={team:d.dataset.team,digit:d.dataset.digit,ghost};ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';d.setPointerCapture?.(e.pointerId);});
+    document.addEventListener('pointermove',e=>{if(state.drag){state.drag.ghost.style.left=e.clientX+'px';state.drag.ghost.style.top=e.clientY+'px';}});
+    document.addEventListener('pointerup',e=>{if(!state.drag)return;const drag=state.drag;drag.ghost.remove();state.drag=null;const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.answer-slot');if(target&&target.dataset.team===drag.team)enterDigit(state.teams[drag.team],drag.digit,Number(target.dataset.slot));});
+    document.querySelectorAll('.time-btn').forEach(b=>b.addEventListener('click',()=>start(Number(b.dataset.minutes))));$('#restart').addEventListener('click',()=>{clearInterval(state.timerId);state.running=false;$('#confettiLayer').innerHTML='';show('home');});
+  })();
+  </script>
+</body></html>
